@@ -1,3 +1,6 @@
-const App = () => <div></div>;
+function App() {
 
-export default App;
+  return (<div></div>)
+}
+
+export default App
