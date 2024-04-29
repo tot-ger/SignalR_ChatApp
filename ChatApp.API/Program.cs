@@ -5,7 +5,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<IChatRoomService, ChatRoomService>();
 builder.Services.AddSignalR();
 
+builder.Services.AddCors();
+
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+  app.UseCors(builder => builder
+    .SetIsOriginAllowed(origin => true)
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowCredentials());
+}
 
 app.MapHub<ChatHub>("/chat");
 
