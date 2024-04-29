@@ -22,16 +22,18 @@ app.MapHub<ChatHub>("/chat");
 
 app.MapGet("/rooms", async (IChatRoomService chatRoomService) => Results.Ok(await chatRoomService.GetAllRoomsAsync()));
 
-app.MapPost("/rooms", async (IChatRoomService chatRoomService, string roomName) =>
+app.MapPost("/rooms", async (IChatRoomService chatRoomService, CreateRoomRequest request) =>
 {
-  if (string.IsNullOrWhiteSpace(roomName))
+  if (string.IsNullOrWhiteSpace(request.RoomName))
   {
     return Results.BadRequest("Room name cannot be empty");
   }
 
-  bool roomCreated = await chatRoomService.CreateRoomAsync(roomName);
+  var rooms = await chatRoomService.CreateRoomAsync(request.RoomName);
 
-  return roomCreated ? Results.Ok() : Results.Conflict("Room already exists");
+  return Results.Ok(rooms);
 });
 
 app.Run();
+
+record CreateRoomRequest(string RoomName);
