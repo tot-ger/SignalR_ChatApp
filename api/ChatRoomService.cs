@@ -5,7 +5,7 @@ namespace ChatApp.API;
 public interface IChatRoomService
 {
   Task<IEnumerable<string>> GetAllRoomsAsync();
-  Task<bool> CreateRoomAsync(string roomName);
+  Task<IEnumerable<string>> CreateRoomAsync(string roomName);
   Task<bool> DeleteRoomAsync(string roomName);
   Task<bool> AddUserToRoomAsync(string roomName, string connectionId, string username);
   Task<bool> RemoveUserFromRoomAsync(string roomName, string connectionId);
@@ -25,9 +25,10 @@ public class ChatRoomService : IChatRoomService
         return await Task.FromResult(value.TryAdd(connectionId, username));
     }
 
-    public async Task<bool> CreateRoomAsync(string roomName)
+    public async Task<IEnumerable<string>> CreateRoomAsync(string roomName)
     {
-        return await Task.FromResult(_rooms.TryAdd(roomName, []));
+        await Task.FromResult(_rooms.TryAdd(roomName, []));
+        return _rooms.Keys;
     }
 
     public async Task<bool> DeleteRoomAsync(string roomName)
@@ -47,15 +48,24 @@ public class ChatRoomService : IChatRoomService
 
     public async Task<bool> RemoveUserFromRoomAsync(string roomName, string connectionId)
     {
-        if (_rooms.TryGetValue(roomName, out var connections))
+         var removed = false;
+        _rooms.AddOrUpdate(roomName,
+            addValueFactory: key => new Dictionary<string, string>(),
+            updateValueFactory: (key, existingValue) =>
+            {
+                if (existingValue.ContainsKey(connectionId))
+                {
+                    existingValue.Remove(connectionId);
+                    removed = true;
+                }
+                return existingValue;
+            });
+
+        if (removed && _rooms.TryGetValue(roomName, out var updatedConnections) && updatedConnections.Count == 0)
         {
-          connections.Remove(connectionId);
-          if (connections.Count == 0)
-          {
             _rooms.TryRemove(roomName, out _);
-          }
-          return await Task.FromResult(true);
         }
-        return await Task.FromResult(false);
+
+        return await Task.FromResult(removed);
     }
 }
