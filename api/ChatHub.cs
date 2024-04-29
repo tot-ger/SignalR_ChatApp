@@ -12,11 +12,11 @@ public class ChatHub(IChatRoomService chatRoomService) : Hub
     if (joinSuccessful)
     {
       await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
-      await Clients.Group(roomName).SendAsync("ReceiveMessage", $"{username} has joined the room");
+      await Clients.Group(roomName).SendAsync("ReceiveMessage", username, "has joined the room");
     }
     else
     {
-      await Clients.Caller.SendAsync("ReceiveMessage", "Failed to join room");
+      await Clients.Caller.SendAsync("ReceiveMessage", null, "Failed to join room");
     }
   }
 
@@ -26,16 +26,16 @@ public class ChatHub(IChatRoomService chatRoomService) : Hub
     if (leftSuccessful)
     {
       await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomName);
-      await Clients.Group(roomName).SendAsync("ReceiveMessage", $"{username} has left the room");
+      await Clients.Group(roomName).SendAsync("ReceiveMessage", username, "has left the room");
     }
     else
     {
-      await Clients.Caller.SendAsync("ReceiveMessage", "Failed to leave room");
+      await Clients.Caller.SendAsync("ReceiveMessage", null, "Failed to leave room");
     }
   }
 
   public async Task SendMessage(string roomName, string username, string message)
   {
-    await Clients.Group(roomName).SendAsync("ReceiveMessage", $"{username}: {message}");
+    await Clients.Group(roomName).SendAsync("ReceiveMessage", username, message);
   }
 }
